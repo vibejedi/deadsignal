@@ -1,4 +1,4 @@
-# DEAD SIGNAL: A Horrors.Fun Game
+# SURVIVE THE HORRORS: A Horrors.Fun Game
 
 **Play free at [deadsignal.horrors.fun](https://deadsignal.horrors.fun)**
 

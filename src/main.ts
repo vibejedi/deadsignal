@@ -47,9 +47,9 @@ async function boot(): Promise<void> {
   // Development-only automation hooks. Stripped from production builds.
   if (import.meta.env.DEV && new URLSearchParams(location.search).has('dev')) {
     (window as unknown as { __DS: unknown }).__DS = game.devApi();
-    console.info('[DEAD SIGNAL] dev hooks available on window.__DS');
+    console.info('[SURVIVE THE HORRORS] dev hooks available on window.__DS');
   }
 }
 
-window.addEventListener('error', (e) => console.error('[DEAD SIGNAL] uncaught', e.error ?? e.message));
+window.addEventListener('error', (e) => console.error('[SURVIVE THE HORRORS] uncaught', e.error ?? e.message));
 void boot();

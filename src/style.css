@@ -40,7 +40,7 @@ b { color: var(--amber); font-weight: 700; }
 .screen { position: fixed; inset: 0; z-index: 20; display: flex; }
 #loading { background: #0a0507; align-items: center; justify-content: center; z-index: 50; }
 .load-inner { width: min(420px, 80vw); text-align: center; }
-.brand-small { font-family: var(--display); letter-spacing: 0.08em; font-size: 34px; color: var(--amber); margin-bottom: 18px; text-shadow: 0 0 18px rgba(224,40,60,0.4); }
+.brand-small { font-family: var(--display); letter-spacing: 0.06em; font-size: 30px; color: var(--amber); margin-bottom: 18px; text-shadow: 0 0 18px rgba(224,40,60,0.4); }
 .load-logo { width: 96px; height: 96px; object-fit: contain; mix-blend-mode: screen; margin: 0 auto 6px; display: block; }
 .load-bar { height: 3px; background: rgba(255,255,255,0.08); }
 #load-fill { height: 100%; width: 0; background: var(--amber); transition: width 0.2s; }
@@ -76,6 +76,9 @@ b { color: var(--amber); font-weight: 700; }
   font-family: var(--display); font-size: clamp(60px, 8.6vw, 118px); line-height: 0.9; margin: 0; letter-spacing: 0.02em; font-weight: 400;
   color: var(--amber); text-shadow: 0 0 28px rgba(224,40,60,0.45), 0 4px 30px rgba(0,0,0,0.7);
 }
+/* Two-tier wordmark echoing HORRORS.FUN: bone "SURVIVE THE" over a blood-red "HORRORS" */
+.title-logo .tl-small { display: block; font-size: 0.42em; letter-spacing: 0.08em; color: var(--ink); text-shadow: 0 4px 24px rgba(0,0,0,0.8); margin-bottom: 0.04em; }
+.title-logo .tl-big { display: block; }
 .title-sub {
   font-size: clamp(16px, 1.8vw, 22px); letter-spacing: 0.62em; color: var(--amber); margin: 10px 0 26px;
   padding-left: 4px;
