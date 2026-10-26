@@ -25,6 +25,8 @@ import { WeaponSystem } from '../weapons/WeaponSystem';
 import { addReserve, cancelReload, createWeapon, effectiveStats, isReloading } from '../weapons/WeaponState';
 import { Level } from '../world/Level';
 import { Input } from './Input';
+import { Rng } from './rng';
+import { Squad } from './Squad';
 import { loadBest, loadSettings, recordBest, saveSettings, type Settings } from './Settings';
 
 export type GameState = 'title' | 'playing' | 'paused' | 'dying' | 'extracting' | 'results';
@@ -45,6 +47,11 @@ export class Game {
   readonly M: Materials;
   readonly level: Level;
   readonly player = new Player();
+  /** Co-op roster; slot 0 is `player`. The simulation reads the whole squad. */
+  readonly squad: Squad;
+  /** Seed of the current run's simulation RNG (zombie AI, spawns, spread, loot). */
+  seed = 0;
+  private simRng = new Rng(1);
   readonly vm: ViewModel;
   readonly fx: Effects;
   readonly enemies: EnemyManager;
@@ -102,12 +109,15 @@ export class Game {
     this.renderer.showViewModel(false); // enabled on deploy
     this.fx = new Effects(this.tex);
     this.renderer.scene.add(this.fx.group);
+    const rnd = () => this.simRng.next();
+    this.squad = new Squad(this.player);
+    this.renderer.scene.add(this.squad.group);
     this.enemies = new EnemyManager(this.tex, this.level, this.fx, this.audio, {
       onKill: (z, head) => this.onKill(z, head),
-      onPlayerHit: (dmg, x, z, heavy) => this.onPlayerHit(dmg, x, z, heavy),
-    });
+      onPlayerHit: (id, dmg, x, z, heavy) => this.onSquadHit(id, dmg, x, z, heavy),
+    }, rnd);
     this.renderer.scene.add(this.enemies.group);
-    this.spawner = new Spawner(this.level, this.enemies);
+    this.spawner = new Spawner(this.level, this.enemies, rnd);
     this.renderer.scene.add(this.grenades.group);
     this.interact = new Interactables(this.M, this.level.poi.crates, this.level.poi.stations);
     this.renderer.scene.add(this.interact.group);
@@ -122,7 +132,7 @@ export class Game {
     this.weapons = new WeaponSystem(this.newLoadout(), this.vm, this.audio, this.fx, {
       onHit: (fb) => { this.hud.hit(fb.kind); this.audio.hitmarker(fb.kind); },
       onShot: () => { this.mission.stats.shots++; },
-    });
+    }, rnd);
     this.menus = new Menus(this);
     this.applySettings();
     this.resetMission();
@@ -146,8 +156,11 @@ export class Game {
     return { cash: PLAYER.startCash, slots: [createWeapon('rifle'), createWeapon('pistol')], active: 0, grenades: PLAYER.startGrenades };
   }
 
-  resetMission(): void {
+  /** Starts a fresh run. In co-op the host picks `seed` and every machine resets with it. */
+  resetMission(seed = (Date.now() ^ (Math.random() * 0x7fffffff)) >>> 0): void {
     const poi = this.level.poi;
+    this.seed = seed;
+    this.simRng = new Rng(seed);
     this.enemies.reset();
     this.spawner.reset();
     this.fx.reset();
@@ -160,7 +173,8 @@ export class Game {
     this.loadout = this.newLoadout();
     this.weapons.reset(this.loadout);
     this.player.reset(poi.playerSpawn.x, poi.playerSpawn.z, poi.playerSpawn.yaw);
-    this.spawner.populate();
+    this.squad.resetForMission();
+    this.spawner.populate(this.squad.size);
     this.level.defenseRing.visible = false;
     this.station = null;
     this.mapOpen = false;
@@ -291,7 +305,7 @@ export class Game {
       this.input.endFrame();
     } else if (this.state === 'dying') {
       this.dyingT += frameDt;
-      this.enemies.update(frameDt, this.playerTarget());
+      this.enemies.update(frameDt, this.squad.targets(false));
       if (this.dyingT > 2.6 && !this.resultShown) this.showResults(this.mission.outcome === 'timeout' ? 'timeout' : 'dead');
     } else if (this.state === 'extracting') {
       this.extractT += frameDt;
@@ -317,11 +331,6 @@ export class Game {
       this.fpsFrames = 0;
       this.fpsTime = 0;
     }
-  }
-
-  private playerTarget() {
-    const p = this.player;
-    return { x: p.pos.x, y: p.pos.y, z: p.pos.z, eyeY: p.eyeY, alive: p.vitals.alive && this.state === 'playing' };
   }
 
   private updateCamera(): void {
@@ -398,24 +407,31 @@ export class Game {
     for (const b of blasts) this.explode(b.x, b.y, b.z);
 
     // Enemies and spawning
-    this.enemies.update(dt, this.playerTarget());
-    const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camQuat);
-    const fl = Math.hypot(fwd.x, fwd.z) || 1;
+    this.enemies.update(dt, this.squad.targets(true));
     this.spawner.update(dt, {
-      px: p.pos.x, pz: p.pos.z, eyeY: p.eyeY, fx: fwd.x / fl, fz: fwd.z / fl,
+      players: this.squad.viewers(),
       pressure: this.mission.pressure,
       defenseActive: this.mission.defense.status === 'active',
       finalHorde: this.mission.extraction.state === 'called' || this.mission.extraction.state === 'landed',
     });
 
     // Mission
-    const events = this.mission.update(dt, { x: p.pos.x, z: p.pos.z }, v.alive);
+    const events = this.mission.update(dt, this.squad.positions());
     for (const e of events) this.onMissionEvent(e);
-    if (this.mission.inContamination(p.pos.x, p.pos.z) && v.alive) {
-      applyDamage(v, MISSION.contaminationDps * dt, true);
-      this.toxicTick -= dt;
-      if (this.toxicTick <= 0) { this.toxicTick = 1.2; this.audio.hurt(false); }
+    for (const m of this.squad.living()) {
+      if (!this.mission.inContamination(m.player.pos.x, m.player.pos.z)) continue;
+      applyDamage(m.player.vitals, MISSION.contaminationDps * dt, true);
+      if (m.kind === 'local') {
+        this.toxicTick -= dt;
+        if (this.toxicTick <= 0) { this.toxicTick = 1.2; this.audio.hurt(false); }
+      } else if (!m.player.vitals.alive) {
+        this.hud.toast(`${m.name} IS DOWN`, 'bad', '', 2);
+      }
     }
+    // Extraction completes once everyone still alive is aboard (a teammate dying can complete it too).
+    const ex = this.mission.extraction;
+    if (ex.state === 'landed' && ex.aboard.size > 0 && ex.tryComplete(this.squad.livingIds())) this.onVictory();
+    this.squad.syncBodies();
     // Elite proximity notice
     const el = this.enemies.elite;
     if (el && el.alive && !this.eliteNotified && (this.enemies.eliteAggro || Math.hypot(el.pos.x - p.pos.x, el.pos.z - p.pos.z) < 30)) {
@@ -478,7 +494,7 @@ export class Game {
     const poi = this.level.poi;
     const near = (x: number, z: number, r: number, y = 0) => Math.hypot(x - p.x, z - p.z) < r && Math.abs(p.y - y) < 1.6;
     const ex = this.mission.extraction;
-    if (ex.state === 'landed' && ex.canBoard({ x: p.x, z: p.z }, this.player.vitals.alive)) return { kind: 'board' };
+    if (ex.state === 'landed' && !this.squad.local.boarded && ex.canBoard({ x: p.x, z: p.z }, this.player.vitals.alive)) return { kind: 'board' };
     if (near(poi.radio.x, poi.radio.z, MISSION.radioRadius)) return { kind: 'radio' };
     if (near(poi.transmitter.x, poi.transmitter.z, 3.6, 0.3) && this.mission.defense.status === 'inactive') return { kind: 'transmitter' };
     for (const s of poi.stations) if (near(s.x, s.z, 2.4)) return { kind: 'station', station: s.kind };
@@ -528,7 +544,7 @@ export class Game {
         break;
       }
       case 'board':
-        if (this.mission.extraction.board({ x: this.player.pos.x, z: this.player.pos.z }, this.player.vitals.alive)) this.onVictory();
+        this.boardMember(0);
         break;
     }
   }
@@ -646,7 +662,31 @@ export class Game {
     const reward = Math.round(z.reward + (head ? ENEMIES.headshotBonus : 0));
     addCash(this.loadout, reward);
     this.mission.stats.salvageEarned += reward;
-    if (Math.random() < ENEMIES.ammoDropChance) this.interact.spawnDrop(z.pos.x, z.pos.z);
+    if (this.simRng.next() < ENEMIES.ammoDropChance) this.interact.spawnDrop(z.pos.x, z.pos.z);
+  }
+
+  /** Routes a zombie hit to the squad member it landed on. */
+  private onSquadHit(id: number, dmg: number, fromX: number, fromZ: number, heavy: boolean): void {
+    if (id === this.squad.local.id) { this.onPlayerHit(dmg, fromX, fromZ, heavy); return; }
+    const m = this.squad.get(id);
+    if (!m || this.state !== 'playing' || !m.player.vitals.alive) return;
+    applyDamage(m.player.vitals, dmg);
+    if (!m.player.vitals.alive) {
+      this.hud.toast(`${m.name} IS DOWN`, 'bad', '', 2);
+      this.squad.syncBodies();
+    }
+  }
+
+  /** Puts a squad member on the landed helicopter; completes the extraction when everyone alive is aboard. */
+  private boardMember(id: number): boolean {
+    const m = this.squad.get(id);
+    const ex = this.mission.extraction;
+    if (!m || m.boarded || !ex.boardPlayer(id, { x: m.player.pos.x, z: m.player.pos.z }, m.player.vitals.alive)) return false;
+    m.boarded = true;
+    this.squad.syncBodies();
+    if (ex.tryComplete(this.squad.livingIds())) this.onVictory();
+    else if (m.kind === 'local') this.hud.toast('ABOARD', 'big', `Waiting for the squad · ${ex.aboard.size}/${this.squad.livingIds().length} aboard`, 3);
+    return true;
   }
 
   private onPlayerHit(dmg: number, fromX: number, fromZ: number, heavy: boolean): void {
@@ -1032,6 +1072,28 @@ export class Game {
       spawnZombie: (type: 'shambler' | 'runner' | 'armored', x: number, z: number, state: 'idle' | 'chase' = 'chase') => this.enemies.spawn(type, regionAt(z), x, z, state),
       clearZombies: () => { for (const z of this.enemies.zombies) if (z.alive && !z.elite) { z.alive = false; z.state = 'dead'; z.deathT = 99; } },
       damagePlayer: (n: number) => this.onPlayerHit(n, this.player.pos.x + 1, this.player.pos.z, false),
+      // Offline co-op stand-ins
+      seed: () => this.seed,
+      addDummy: (x = this.player.pos.x + 2, z = this.player.pos.z, yaw = this.player.yaw) => {
+        const m = this.squad.addDummy(x, this.level.world.groundHeight(x, z, 0.3, 1.5), z, yaw);
+        return m && m.id;
+      },
+      moveDummy: (id: number, x: number, z: number, yaw?: number) => {
+        const m = this.squad.get(id);
+        if (!m || m.kind !== 'dummy') return false;
+        m.player.pos = { x, y: this.level.world.groundHeight(x, z, 0.3, 1.5), z };
+        if (yaw !== undefined) m.player.yaw = yaw;
+        this.squad.syncBodies();
+        return true;
+      },
+      damageDummy: (id: number, n: number) => this.onSquadHit(id, n, 0, 0, false),
+      boardDummy: (id: number) => this.boardMember(id),
+      removeDummies: () => this.squad.removeDummies(),
+      squad: () => this.squad.members.map((m) => ({
+        id: m.id, kind: m.kind, name: m.name, x: +m.player.pos.x.toFixed(2), z: +m.player.pos.z.toFixed(2),
+        health: Math.round(m.player.vitals.health), alive: m.player.vitals.alive, boarded: m.boarded,
+        chasers: this.enemies.zombies.filter((z) => z.alive && z.targetId === m.id && (z.state === 'chase' || z.state === 'attack')).length,
+      })),
       frameStats: () => {
         const a = [...this.frameTimes].sort((x, y) => x - y);
         const avg = a.reduce((s, x) => s + x, 0) / Math.max(1, a.length);

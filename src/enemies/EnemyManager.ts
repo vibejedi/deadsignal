@@ -7,18 +7,17 @@ import type { Level } from '../world/Level';
 import { Zombie } from './Zombie';
 import { ZombieModels } from './ZombieModel';
 import type { TextureLib } from '../render/textures';
+import { noTarget, pickTarget, type PlayerTarget } from './targeting';
+
+export type { PlayerTarget } from './targeting';
 
 export interface ZombieHit { z: Zombie; dist: number; head: boolean; x: number; y: number; z_: number }
 
 export interface DamageOutcome { killed: boolean; head: boolean; armor: boolean; dealt: number }
 
-export interface PlayerTarget {
-  x: number; y: number; z: number; eyeY: number; alive: boolean;
-}
-
 export interface EnemyEvents {
   onKill(z: Zombie, head: boolean): void;
-  onPlayerHit(dmg: number, fromX: number, fromZ: number, heavy: boolean): void;
+  onPlayerHit(playerId: number, dmg: number, fromX: number, fromZ: number, heavy: boolean): void;
 }
 
 export class EnemyManager {
@@ -27,7 +26,7 @@ export class EnemyManager {
   readonly zombies: Zombie[] = [];
   private pool = new Map<string, Zombie[]>();
   private flowT = 0;
-  private lastFlowCell = -1;
+  private lastFlowKey = '';
   private hash = new Map<number, Zombie[]>();
   private seedCounter = 1;
   private time = 0;
@@ -36,7 +35,8 @@ export class EnemyManager {
   eliteAggro = false;
   alertLevel = 0;
 
-  constructor(tex: TextureLib, private level: Level, private fx: Effects, private audio: AudioEngine, private events: EnemyEvents) {
+  /** `rnd` is the shared, seeded simulation RNG so every machine in a session can reproduce the same run. */
+  constructor(tex: TextureLib, private level: Level, private fx: Effects, private audio: AudioEngine, private events: EnemyEvents, private rnd: () => number = Math.random) {
     this.models = new ZombieModels(tex);
   }
 
@@ -57,13 +57,13 @@ export class EnemyManager {
     this.zombies.length = 0;
     this.elite = null;
     this.eliteAggro = false;
-    this.lastFlowCell = -1;
+    this.lastFlowKey = '';
     this.flowT = 0;
   }
 
   private acquire(type: ZombieType): Zombie {
     const variants = this.models.variants[type];
-    const v = variants[Math.floor(Math.random() * variants.length)];
+    const v = variants[Math.floor(this.rnd() * variants.length)];
     const list = this.pool.get(v.key);
     let z = list?.pop();
     if (!z) {
@@ -91,7 +91,7 @@ export class EnemyManager {
   spawn(type: ZombieType, region: RegionId, x: number, z: number, state: 'idle' | 'chase' = 'chase'): Zombie {
     const zb = this.acquire(type);
     const y = this.level.world.groundHeight(x, z, 0.3, 3);
-    zb.spawn(type, region, x, z, y, this.seedCounter++ * 0.6180339 + Math.random());
+    zb.spawn(type, region, x, z, y, this.seedCounter++ * 0.6180339 + this.rnd());
     if (state === 'chase') zb.setState('chase');
     this.zombies.push(zb);
     if (type === 'elite') this.elite = zb;
@@ -109,16 +109,17 @@ export class EnemyManager {
   }
 
   // --------------------------------------------------------------------------------------------
-  update(dt: number, p: PlayerTarget): void {
+  update(dt: number, players: readonly PlayerTarget[]): void {
     this.time += dt;
     const nav = this.level.nav;
     const world = this.level.world;
-    // Shared flow field toward the player, refreshed on a timer or when the player changes cell.
+    // Shared flow field toward the nearest living player, refreshed on a timer or when anyone changes cell.
     this.flowT -= dt;
-    const cell = nav.cellOf(p.x, p.z);
-    if (this.flowT <= 0 || (cell !== this.lastFlowCell && this.flowT < ENEMIES.flowFieldInterval * 0.5)) {
-      nav.computeFlow(p.x, p.z);
-      this.lastFlowCell = cell;
+    const living = players.filter((t) => t.alive);
+    const flowKey = living.map((t) => nav.cellOf(t.x, t.z)).join(',');
+    if (living.length && (this.flowT <= 0 || (flowKey !== this.lastFlowKey && this.flowT < ENEMIES.flowFieldInterval * 0.5))) {
+      nav.computeFlowMulti(living);
+      this.lastFlowKey = flowKey;
       this.flowT = ENEMIES.flowFieldInterval;
     }
     // Spatial hash for separation
@@ -142,7 +143,9 @@ export class EnemyManager {
         }
         continue;
       }
-      this.think(z, dt, p);
+      const target = pickTarget(z.pos.x, z.pos.z, players, z.targetId) ?? noTarget(z.pos.x, z.pos.y, z.pos.z);
+      z.targetId = target.id;
+      this.think(z, dt, target);
       if (z.state === 'chase' || z.state === 'attack') alertCount++;
       this.moveZombie(z, dt, world);
     }
@@ -161,13 +164,13 @@ export class EnemyManager {
     // Staggered line-of-sight evaluation
     z.losT -= dt;
     if (z.losT <= 0) {
-      z.losT = ENEMIES.losCheckInterval + Math.random() * 0.1;
+      z.losT = ENEMIES.losCheckInterval + this.rnd() * 0.1;
       const eyeY = z.pos.y + 1.55 * z.scale;
       z.hasLOS = dist < 60 && !world.segmentBlocked(z.pos.x, eyeY, z.pos.z, p.x, p.eyeY, p.z);
     }
     z.voiceT -= dt;
     if (z.voiceT <= 0) {
-      z.voiceT = 3 + Math.random() * 6;
+      z.voiceT = 3 + this.rnd() * 6;
       if (dist < 35) this.audio.zombieVoice(z.pos, z.elite ? 'elite' : 'groan', z.type === 'runner' ? 1.3 : z.type === 'armored' ? 0.8 : 1);
     }
 
@@ -176,11 +179,11 @@ export class EnemyManager {
         // Wander a little around the spawn position.
         z.wanderT -= dt;
         if (z.wanderT <= 0) {
-          z.wanderT = 3 + Math.random() * 5;
-          const a = Math.random() * Math.PI * 2;
+          z.wanderT = 3 + this.rnd() * 5;
+          const a = this.rnd() * Math.PI * 2;
           z.wanderX = z.pos.x + Math.cos(a) * 4;
           z.wanderZ = z.pos.z + Math.sin(a) * 4;
-          if (!nav.isWalkable(z.wanderX, z.wanderZ) || Math.random() < 0.4) { z.wanderX = z.pos.x; z.wanderZ = z.pos.z; }
+          if (!nav.isWalkable(z.wanderX, z.wanderZ) || this.rnd() < 0.4) { z.wanderX = z.pos.x; z.wanderZ = z.pos.z; }
         }
         const wx = z.wanderX - z.pos.x, wz = z.wanderZ - z.pos.z;
         const wl = Math.hypot(wx, wz);
@@ -219,7 +222,7 @@ export class EnemyManager {
         z.stuckT += dt;
         if (z.stuckT > 1.2) {
           const moved = Math.hypot(z.pos.x - z.lastX, z.pos.z - z.lastZ);
-          if (moved < 0.35 && dist > range + 0.5) { z.sideStepT = 0.6; z.sideSign = Math.random() < 0.5 ? -1 : 1; }
+          if (moved < 0.35 && dist > range + 0.5) { z.sideStepT = 0.6; z.sideSign = this.rnd() < 0.5 ? -1 : 1; }
           z.lastX = z.pos.x; z.lastZ = z.pos.z; z.stuckT = 0;
         }
         if (z.sideStepT > 0) {
@@ -244,7 +247,7 @@ export class EnemyManager {
           this.resolveAttack(z, p);
         }
         if (z.stateT >= wind + 0.4) {
-          z.attackCD = z.def.attackCooldown * (0.85 + Math.random() * 0.3);
+          z.attackCD = z.def.attackCooldown * (0.85 + this.rnd() * 0.3);
           z.setState('chase');
         }
         break;
@@ -290,7 +293,7 @@ export class EnemyManager {
     // No hits through walls: chest-to-chest segment must be clear.
     const zy = z.pos.y + 1.2 * z.scale;
     if (world.segmentBlocked(z.pos.x, zy, z.pos.z, p.x, p.y + 1.2, p.z)) return;
-    this.events.onPlayerHit(z.def.damage * z.damageMult, z.pos.x, z.pos.z, z.elite || z.type === 'armored');
+    this.events.onPlayerHit(p.id, z.def.damage * z.damageMult, z.pos.x, z.pos.z, z.elite || z.type === 'armored');
   }
 
   private moveZombie(z: Zombie, dt: number, world: Level['world']): void {
@@ -386,7 +389,7 @@ export class EnemyManager {
       }
     } else {
       dmg = amount * z.def.bodyArmorMult;
-      if (z.def.bodyArmorMult < 1 && Math.random() < 0.4) this.fx.sparkBurst(hx, hy, hz, 3, [1, 0.8, 0.5]);
+      if (z.def.bodyArmorMult < 1 && this.rnd() < 0.4) this.fx.sparkBurst(hx, hy, hz, 3, [1, 0.8, 0.5]);
     }
     z.hp -= dmg;
     out.dealt = dmg;
@@ -397,7 +400,7 @@ export class EnemyManager {
       if (z.elite) this.eliteAggro = true;
     }
     z.flinchV += Math.min(6, dmg / 25) * (z.elite ? 0.3 : 1);
-    z.staggerDir = Math.random() < 0.5 ? -1 : 1;
+    z.staggerDir = this.rnd() < 0.5 ? -1 : 1;
     if (z.hp <= 0) {
       this.kill(z, dirX, dirZ, head && !out.armor);
       out.killed = true;

@@ -93,14 +93,26 @@ export class NavGrid {
 
   /** Dijkstra from the target outward over walkable cells (8-connected, no corner cutting). */
   computeFlow(tx: number, tz: number): void {
-    let target = this.cellOf(tx, tz);
-    if (target < 0 || !this.walk[target]) target = this.nearestWalkable(tx, tz);
-    this.targetCell = target;
+    this.computeFlowMulti([{ x: tx, z: tz }]);
+  }
+
+  /**
+   * Multi-source Dijkstra: every target cell starts at distance 0, so `dist` becomes the path distance
+   * to the nearest target and the flow field leads each agent toward whichever target is closest.
+   */
+  computeFlowMulti(targets: readonly { x: number; z: number }[]): void {
     this.dist.fill(Infinity);
-    if (target < 0) return;
     this.heapLen = 0;
-    this.dist[target] = 0;
-    this.push(target, 0);
+    this.targetCell = -1;
+    for (const t of targets) {
+      let target = this.cellOf(t.x, t.z);
+      if (target < 0 || !this.walk[target]) target = this.nearestWalkable(t.x, t.z);
+      if (target < 0 || this.dist[target] === 0) continue;
+      if (this.targetCell < 0) this.targetCell = target;
+      this.dist[target] = 0;
+      this.push(target, 0);
+    }
+    if (this.heapLen === 0) return;
     const w = this.w;
     while (this.heapLen > 0) {
       const key = this.heapKey[0];

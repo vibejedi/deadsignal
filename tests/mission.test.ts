@@ -74,11 +74,11 @@ describe('mission timeline', () => {
   it('unlocks extraction and starts the final phase once both contracts are done', () => {
     const m = mk();
     m.defense.activate();
-    let events = m.update(MISSION.defenseHoldTime + 1, { x: 40, z: 6 }, true);
+    let events = m.update(MISSION.defenseHoldTime + 1, [{ x: 40, z: 6, alive: true }]);
     expect(events.some((e) => e.type === 'defenseComplete')).toBe(true);
     expect(m.extraction.state).toBe('locked');
     m.onEliteKilled();
-    events = m.update(0.1, { x: 0, z: 0 }, true);
+    events = m.update(0.1, [{ x: 0, z: 0, alive: true }]);
     expect(events.some((e) => e.type === 'extractionUnlocked')).toBe(true);
     expect(events.some((e) => e.type === 'finalPhase')).toBe(true);
     expect(m.extraction.state).toBe('available');
@@ -87,19 +87,19 @@ describe('mission timeline', () => {
 
   it('forces the contamination phase at the scheduled time and fails at the deadline', () => {
     const m = mk();
-    const ev = m.update(MISSION.forcedFinalPhaseAt + 1, { x: 0, z: 0 }, true);
+    const ev = m.update(MISSION.forcedFinalPhaseAt + 1, [{ x: 0, z: 0, alive: true }]);
     expect(ev.some((e) => e.type === 'finalPhase' && e.forced)).toBe(true);
     expect(m.inContamination(0, -70)).toBe(true);
-    const end = m.update(MISSION.deadline, { x: 0, z: 0 }, true);
+    const end = m.update(MISSION.deadline, [{ x: 0, z: 0, alive: true }]);
     expect(end.some((e) => e.type === 'deadline')).toBe(true);
     expect(m.outcome).toBe('timeout');
   });
 
   it('contamination reaches the landing zone by the deadline', () => {
     const m = mk();
-    m.update(MISSION.forcedFinalPhaseAt + 0.1, { x: 0, z: 0 }, true);
+    m.update(MISSION.forcedFinalPhaseAt + 0.1, [{ x: 0, z: 0, alive: true }]);
     expect(m.inContamination(40, 46)).toBe(false);
-    m.update(m.deadline - m.time - 0.5, { x: 0, z: 0 }, true);
+    m.update(m.deadline - m.time - 0.5, [{ x: 0, z: 0, alive: true }]);
     expect(m.inContamination(40, 46)).toBe(true);
   });
 });

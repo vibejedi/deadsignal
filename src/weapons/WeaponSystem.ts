@@ -39,7 +39,7 @@ export class WeaponSystem {
   private tmp = new THREE.Vector3();
   private camQ = new THREE.Quaternion();
 
-  constructor(loadout: Loadout, private vm: ViewModel, private audio: AudioEngine, private fx: Effects, private cb: WeaponCallbacks) {
+  constructor(loadout: Loadout, private vm: ViewModel, private audio: AudioEngine, private fx: Effects, private cb: WeaponCallbacks, private rnd: () => number = Math.random) {
     this.loadout = loadout;
   }
 
@@ -204,8 +204,8 @@ export class WeaponSystem {
     const acc = new Map<Zombie, { dmg: number; head: boolean; x: number; y: number; z: number; dx: number; dz: number }>();
     for (let i = 0; i < def.pellets; i++) {
       // Uniform random direction within the spread cone
-      const r = spread * Math.sqrt(Math.random());
-      const a = Math.random() * Math.PI * 2;
+      const r = spread * Math.sqrt(this.rnd());
+      const a = this.rnd() * Math.PI * 2;
       const dir = fwd.clone()
         .addScaledVector(right, Math.tan(r) * Math.cos(a))
         .addScaledVector(up, Math.tan(r) * Math.sin(a))

@@ -26,6 +26,8 @@ export class Zombie {
   scale = 1;
   attackCD = 0;
   attackResolved = false;
+  /** Squad member this zombie is currently hunting (-1 = none). */
+  targetId = -1;
   losT = 0;
   hasLOS = false;
   navT = 0;
@@ -59,6 +61,7 @@ export class Zombie {
 
   spawn(type: ZombieType, region: RegionId, x: number, z: number, y: number, rngSeed: number): void {
     this.type = type;
+    this.targetId = -1;
     this.def = ZOMBIES[type];
     this.region = region;
     const reg = REGIONS[region];

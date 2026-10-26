@@ -3,6 +3,9 @@ import { MISSION } from '../config';
 import { DefenseContract, HuntContract, contractsComplete } from './Contracts';
 import { ExtractionFSM, type Vec2 } from './Extraction';
 
+/** A squad member as the mission sees them. */
+export interface SquadPos extends Vec2 { alive: boolean }
+
 export type MissionEvent =
   | { type: 'defenseComplete' }
   | { type: 'huntComplete' }
@@ -67,11 +70,12 @@ export class Mission {
     out.push({ type: 'finalPhase', forced });
   }
 
-  update(dt: number, playerPos: Vec2, alive: boolean): MissionEvent[] {
+  update(dt: number, squad: readonly SquadPos[]): MissionEvent[] {
     const out: MissionEvent[] = [];
     if (this.outcome !== 'active') return out;
     this.time += dt;
-    const inZone = alive && Math.hypot(playerPos.x - this.defenseCenter.x, playerPos.z - this.defenseCenter.z) <= MISSION.defenseRadius;
+    // The relay transmits while any living squad member holds the zone.
+    const inZone = squad.some((p) => p.alive && Math.hypot(p.x - this.defenseCenter.x, p.z - this.defenseCenter.z) <= MISSION.defenseRadius);
     if (this.defense.update(dt, inZone)) out.push({ type: 'defenseComplete' });
     if (contractsComplete(this.defense, this.hunt) && !this.unlockedAnnounced) {
       this.unlockedAnnounced = true;

@@ -256,6 +256,19 @@ export const ECONOMY = {
   plateOverflowCash: 100,
 };
 
+/** Co-op squad scaling. Each extra player adds these fractions on top of the solo values. */
+export const COOP = {
+  maxSquad: 4,
+  capPerExtraPlayer: 0.35,
+  ratePerExtraPlayer: 0.3,
+  eliteHpPerExtraPlayer: 0.5,
+};
+
+/** Multiplier for a squad of `n` players: 1 for solo, +`perExtra` for each additional player. */
+export function squadScale(n: number, perExtra: number): number {
+  return 1 + perExtra * Math.max(0, Math.min(COOP.maxSquad, n) - 1);
+}
+
 export const MISSION = {
   deadline: 900, // 15:00 total mission clock
   finalPhaseWindow: 330, // once both contracts complete, the remaining window is clamped to this
