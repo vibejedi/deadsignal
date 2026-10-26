@@ -1,4 +1,4 @@
-// Procedural infected-human models built as rigidly skinned meshes. Geometry variants are shared;
+// Procedural infected-human models (Horrors.Fun look: red eyes, claws, fangs) built as rigidly skinned meshes. Geometry variants are shared;
 // each zombie instance gets its own skeleton so animation is independent.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -54,10 +54,10 @@ export class ZombieModels {
 
   constructor(tex: TextureLib) {
     this.bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88, metalness: 0.02, map: tex.grime });
-    this.eyeMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffc24a).multiplyScalar(2.5) });
-    this.eliteEyeMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff2a1a).multiplyScalar(4) });
+    this.eyeMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff1a2e).multiplyScalar(3.2) });
+    this.eliteEyeMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff1030).multiplyScalar(5) });
     this.helmetMat = new THREE.MeshStandardMaterial({ color: 0x3b4034, roughness: 0.55, metalness: 0.5, map: tex.grime });
-    this.eliteHelmetMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2c, roughness: 0.4, metalness: 0.75, map: tex.grime, emissive: 0x300800, emissiveIntensity: 0.6 });
+    this.eliteHelmetMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2c, roughness: 0.4, metalness: 0.75, map: tex.grime, emissive: 0x3a0610, emissiveIntensity: 0.8 });
     this.variants = { shambler: [], runner: [], armored: [], elite: [] };
     for (let i = 0; i < 6; i++) this.variants.shambler.push(this.build('shambler', i));
     for (let i = 0; i < 4; i++) this.variants.runner.push(this.build('runner', i));
@@ -69,11 +69,11 @@ export class ZombieModels {
     const r = this.rng;
     const shirts = [0x5a5f66, 0x6b4a3a, 0x3d4a5c, 0x7a7466, 0x4a5a3a, 0x8a8a84, 0x5c2e2a, 0x2e3438];
     const pants = [0x2c3038, 0x3a3428, 0x4a4a44, 0x232528, 0x3c4a5a];
-    const skins = [0x8a9a86, 0x9aa090, 0x7a8474, 0xa0a494, 0x86887a];
+    const skins = [0x9a8a88, 0xa89a96, 0x8a7a82, 0xb0a29e, 0x7e7078];
     if (type === 'armored') return { shirt: new THREE.Color(0x4a5238), pants: new THREE.Color(0x3a4030), skin: new THREE.Color(r.pick(skins)), shoes: new THREE.Color(0x1a1a18) };
-    if (type === 'elite') return { shirt: new THREE.Color(0x2a2c2a), pants: new THREE.Color(0x222420), skin: new THREE.Color(0x6a7a62), shoes: new THREE.Color(0x121212) };
+    if (type === 'elite') return { shirt: new THREE.Color(0x2a2c2a), pants: new THREE.Color(0x222420), skin: new THREE.Color(0x6e5a62), shoes: new THREE.Color(0x121212) };
     // Hazmat worker variant for some shamblers
-    if (type === 'shambler' && r.chance(0.2)) return { shirt: new THREE.Color(0xb89a2a), pants: new THREE.Color(0xa88a24), skin: new THREE.Color(r.pick(skins)), shoes: new THREE.Color(0x1a1a18) };
+    if (type === 'shambler' && r.chance(0.2)) return { shirt: new THREE.Color(0x7a5a2a), pants: new THREE.Color(0x6a4c22), skin: new THREE.Color(r.pick(skins)), shoes: new THREE.Color(0x1a1a18) };
     return { shirt: new THREE.Color(r.pick(shirts)), pants: new THREE.Color(r.pick(pants)), skin: new THREE.Color(r.pick(skins)), shoes: new THREE.Color(0x1c1a18) };
   }
 
@@ -83,7 +83,7 @@ export class ZombieModels {
     const r = this.rng;
     const body: THREE.BufferGeometry[] = [];
     const eyes: THREE.BufferGeometry[] = [];
-    const blood = new THREE.Color(0x4a0e0a);
+    const blood = new THREE.Color(0x5a0810);
     const bulky = type === 'armored' || type === 'elite';
     const thin = type === 'runner';
     const shoulderW = bulky ? 1.18 : thin ? 0.92 : 1 + r.range(-0.05, 0.08);
@@ -125,11 +125,14 @@ export class ZombieModels {
 
     // Torso
     body.push(part(new THREE.BoxGeometry(0.34 * bellyW, 0.2, 0.21), BONE.hips, pal.pants, 0, 0.94, 0));
-    body.push(part(new THREE.BoxGeometry(0.31 * bellyW, 0.22, 0.2 * bellyW), BONE.spine, pal.shirt, 0, 1.1, 0.005, { bloodChance: 0.15 }));
-    body.push(part(new THREE.BoxGeometry(0.4 * shoulderW, 0.27, 0.23), BONE.chest, pal.shirt, 0, 1.32, 0, { bloodChance: 0.2 }));
+    body.push(part(new THREE.BoxGeometry(0.31 * bellyW, 0.22, 0.2 * bellyW), BONE.spine, pal.shirt, 0, 1.1, 0.005, { bloodChance: 0.3 }));
+    body.push(part(new THREE.BoxGeometry(0.4 * shoulderW, 0.27, 0.23), BONE.chest, pal.shirt, 0, 1.32, 0, { bloodChance: 0.35 }));
     body.push(part(new THREE.BoxGeometry(0.46 * shoulderW, 0.09, 0.19), BONE.chest, pal.shirt, 0, 1.465, -0.005));
-    // Exposed ribs / torn shirt for runners
-    if (thin) body.push(part(new THREE.BoxGeometry(0.2, 0.14, 0.02), BONE.chest, pal.skin, 0.04, 1.28, 0.118, { bloodChance: 0.5 }));
+    // Exposed ribs through a torn shirt: runners always, some shamblers
+    if (thin || (type === 'shambler' && r.chance(0.35))) {
+      body.push(part(new THREE.BoxGeometry(0.22, 0.17, 0.02), BONE.chest, blood.clone().multiplyScalar(0.6), 0.03, 1.28, 0.116));
+      for (let i = 0; i < 4; i++) body.push(part(new THREE.BoxGeometry(0.2 - i * 0.02, 0.014, 0.018), BONE.chest, new THREE.Color(0xd8cdbd), 0.03, 1.34 - i * 0.04, 0.124, { bloodChance: 0.4, grime: 0.15 }));
+    }
     // Neck & head
     body.push(part(new THREE.CylinderGeometry(0.052, 0.06, 0.12, 8), BONE.neck, pal.skin, 0, 1.53, 0));
     const headG = new THREE.SphereGeometry(0.11, 12, 10);
@@ -137,21 +140,24 @@ export class ZombieModels {
     body.push(part(new THREE.BoxGeometry(0.15, 0.035, 0.05), BONE.head, pal.skin.clone().multiplyScalar(0.8), 0, 1.71, 0.09)); // brow
     body.push(part(new THREE.BoxGeometry(0.03, 0.05, 0.04), BONE.head, pal.skin, 0, 1.665, 0.115)); // nose
     body.push(part(new THREE.BoxGeometry(0.1, 0.02, 0.02), BONE.head, new THREE.Color(0x1a0a08), 0, 1.69, 0.1)); // dark sockets
-    body.push(part(new THREE.BoxGeometry(0.12, 0.05, 0.1), BONE.jaw, pal.skin, 0, 1.575, 0.04, { bloodChance: 0.6 }));
+    body.push(part(new THREE.BoxGeometry(0.12, 0.05, 0.1), BONE.jaw, pal.skin, 0, 1.575, 0.04, { bloodChance: 0.85 }));
     body.push(part(new THREE.BoxGeometry(0.09, 0.012, 0.02), BONE.jaw, new THREE.Color(0xc8c0a0), 0, 1.6, 0.09)); // teeth
+    body.push(part(new THREE.BoxGeometry(0.085, 0.04, 0.02), BONE.head, new THREE.Color(0x120406), 0, 1.625, 0.098)); // mouth
+    for (let i = 0; i < 5; i++) body.push(part(new THREE.ConeGeometry(0.008, 0.026, 4), BONE.head, new THREE.Color(0xd2c6a8), -0.032 + i * 0.016, 1.632, 0.108, { rx: Math.PI, grime: 0.2 })); // upper fangs
     // Hair / cap for some
     if (!bulky && r.chance(0.5)) body.push(part(new THREE.SphereGeometry(0.115, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2.2), BONE.head, new THREE.Color(r.pick([0x1a1410, 0x3a2a1a, 0x5a5048, 0x222222])), 0, 1.68, -0.005, { sy: 1.05 }));
     // Eyes (emissive group)
-    for (const s of [-1, 1]) eyes.push(part(new THREE.SphereGeometry(0.016, 6, 4), BONE.head, new THREE.Color(1, 1, 1), s * 0.038, 1.69, 0.1, { grime: 0 }));
+    for (const s of [-1, 1]) eyes.push(part(new THREE.SphereGeometry(0.02, 6, 4), BONE.head, new THREE.Color(1, 1, 1), s * 0.038, 1.69, 0.1, { grime: 0 }));
     // Arms
     for (const s of [1, -1]) {
       const arm = s > 0 ? BONE.armL : BONE.armR, fore = s > 0 ? BONE.foreL : BONE.foreR;
       const x = s * 0.22 * shoulderW;
       const upperCol = sleeveless ? pal.skin : pal.shirt;
       body.push(part(new THREE.CapsuleGeometry(bulky ? 0.06 : 0.048, 0.19, 3, 8), arm, upperCol, x, P[arm].y - 0.14, 0));
-      body.push(part(new THREE.CapsuleGeometry(bulky ? 0.05 : 0.04, 0.2, 3, 8), fore, pal.skin, x, P[fore].y - 0.12, 0, { bloodChance: 0.15 }));
+      body.push(part(new THREE.CapsuleGeometry(bulky ? 0.05 : 0.04, 0.2, 3, 8), fore, pal.skin, x, P[fore].y - 0.12, 0, { bloodChance: 0.3 }));
       body.push(part(new THREE.BoxGeometry(0.06, 0.1, 0.035), fore, pal.skin.clone().multiplyScalar(0.85), x, P[fore].y - 0.3, 0.01));
       body.push(part(new THREE.BoxGeometry(0.05, 0.06, 0.03), fore, pal.skin.clone().multiplyScalar(0.8), x, P[fore].y - 0.37, 0.03, { rx: 0.4 })); // fingers curled
+      for (let c = 0; c < 3; c++) body.push(part(new THREE.ConeGeometry(0.008, 0.07, 4), fore, new THREE.Color(0xcfc3ae), x - 0.018 + c * 0.018, P[fore].y - 0.43, 0.05, { rx: Math.PI - 0.5, bloodChance: 0.5, grime: 0.2 })); // claws
     }
     // Legs
     for (const s of [1, -1]) {

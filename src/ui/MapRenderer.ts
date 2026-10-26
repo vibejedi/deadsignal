@@ -34,16 +34,16 @@ export class MapRenderer {
     this.base.width = this.w;
     this.base.height = this.h;
     const ctx = this.base.getContext('2d')!;
-    ctx.fillStyle = '#1b1f22';
+    ctx.fillStyle = '#1a1014';
     ctx.fillRect(0, 0, this.w, this.h);
     // Region tint bands
     const band = (z0: number, z1: number, col: string) => {
       ctx.fillStyle = col;
       ctx.fillRect(0, this.toY(z0), this.w, this.toY(z1) - this.toY(z0));
     };
-    band(WORLD.minZ, REGION_BOUNDS.mediumMinZ, 'rgba(180,50,40,0.22)');
-    band(REGION_BOUNDS.mediumMinZ, REGION_BOUNDS.lowMinZ, 'rgba(210,160,60,0.16)');
-    band(REGION_BOUNDS.lowMinZ, WORLD.maxZ, 'rgba(120,180,100,0.14)');
+    band(WORLD.minZ, REGION_BOUNDS.mediumMinZ, 'rgba(224,40,60,0.22)');
+    band(REGION_BOUNDS.mediumMinZ, REGION_BOUNDS.lowMinZ, 'rgba(163,50,74,0.18)');
+    band(REGION_BOUNDS.lowMinZ, WORLD.maxZ, 'rgba(110,70,135,0.16)');
     const order: ShapeKindKey[] = ['compound', 'yard', 'lot', 'road', 'sidewalk', 'prop', 'container', 'fence', 'building', 'interior', 'wall'];
     const shapes = level.regionShapes();
     for (const k of order) {
@@ -114,7 +114,7 @@ export class MapRenderer {
     ctx.save();
     ctx.translate(size / 2, size / 2);
     ctx.rotate(st.yaw);
-    ctx.fillStyle = '#e8c35a';
+    ctx.fillStyle = '#e0283c';
     ctx.font = 'bold 12px "DIN Alternate",sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('N', 0, -size / 2 + 13);
@@ -149,8 +149,8 @@ export class MapRenderer {
   private overlays(ctx: CanvasRenderingContext2D, st: MapState, px: number, inv: number, full = false): void {
     if (st.contamination) {
       const c = st.contamination;
-      ctx.fillStyle = 'rgba(90,255,60,0.16)';
-      ctx.strokeStyle = 'rgba(120,255,80,0.8)';
+      ctx.fillStyle = 'rgba(160,76,255,0.18)';
+      ctx.strokeStyle = 'rgba(190,120,255,0.85)';
       ctx.lineWidth = 3 * inv;
       ctx.beginPath();
       ctx.arc(this.toX(c.x), this.toY(c.z), c.r * px, 0, Math.PI * 2);
@@ -216,7 +216,7 @@ function drawIcon(ctx: CanvasRenderingContext2D, kind: MapMarker['kind'], full: 
       break;
     case 'lz':
     case 'lzLocked':
-      ctx.fillStyle = kind === 'lz' ? '#f2e36a' : '#6a6a60';
+      ctx.fillStyle = kind === 'lz' ? '#f5e9e0' : '#6a6a60';
       ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#111';
       ctx.font = 'bold 13px "DIN Alternate",sans-serif';

@@ -102,7 +102,7 @@ export class Materials {
     this.lampWarm = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffc27a).multiplyScalar(3) });
     this.lampCold = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xcfe3ff).multiplyScalar(3) });
     this.beaconRed = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff2a1a).multiplyScalar(4) });
-    this.toxicGlow = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7dff5a).multiplyScalar(2.2) });
+    this.toxicGlow = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xb45cff).multiplyScalar(2.2) });
     this.screenGreen = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x4dff9a).multiplyScalar(1.6) });
     this.screenAmber = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffb34d).multiplyScalar(1.6) });
     this.laneLine = new THREE.MeshStandardMaterial({ color: 0xc8c8c0, roughness: 0.7, map: t.grime, polygonOffset: true, polygonOffsetFactor: -2 });
@@ -112,12 +112,12 @@ export class Materials {
     const pool = (c: number, o: number) => new THREE.MeshBasicMaterial({ map: t.lightPool, color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 });
     this.lightPoolWarm = pool(0xffa050, 0.42);
     this.lightPoolRed = pool(0xff2010, 0.45);
-    this.lightPoolToxic = pool(0x60ff40, 0.35);
+    this.lightPoolToxic = pool(0xa04cff, 0.35);
     this.lightPoolCold = pool(0x9fc4ff, 0.3);
     const glow = (c: number, o = 1) => new THREE.SpriteMaterial({ map: t.glow, color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false });
     this.glowWarm = glow(0xffb060, 0.9);
     this.glowRed = glow(0xff2a1a);
-    this.glowToxic = glow(0x80ff50, 0.8);
+    this.glowToxic = glow(0xc070ff, 0.8);
     this.glowCold = glow(0xbfd8ff, 0.8);
     this.cable = new THREE.LineBasicMaterial({ color: 0x0c0c0c });
   }

@@ -420,7 +420,7 @@ export class Game {
     const el = this.enemies.elite;
     if (el && el.alive && !this.eliteNotified && (this.enemies.eliteAggro || Math.hypot(el.pos.x - p.pos.x, el.pos.z - p.pos.z) < 30)) {
       this.eliteNotified = true;
-      this.hud.toast('WARDEN-9 SIGHTED', 'bad', 'Heavily armoured · break the helmet, then go for the head', 3.5);
+      this.hud.toast('WARDEN-9 SIGHTED', 'bad', 'It wears a helmet · break it, then go for the head', 3.5);
       this.audio.ui('alert');
     }
 
@@ -510,7 +510,7 @@ export class Game {
         if (this.mission.defense.activate()) {
           this.level.defenseRing.visible = true;
           this.audio.ui('contract');
-          this.hud.toast('UPLINK RELAY ONLINE', 'big', 'Hold the marked zone while it transmits', 3.5);
+          this.hud.toast('UPLINK RELAY ONLINE', 'big', 'Hold the zone while it transmits · everything heard that', 3.5);
           this.enemies.noise(this.player.pos.x, this.player.pos.z, 70);
         }
         break;
@@ -686,7 +686,7 @@ export class Game {
       case 'heliLanded':
         if (!this.landedAnnounced) {
           this.landedAnnounced = true;
-          this.hud.toast('RAVEN 2-1 ON THE GROUND', 'big', 'Get to the helicopter door and press E', 4);
+          this.hud.toast('RAVEN 2-1 ON THE GROUND', 'big', 'Get to the door and press E · don\'t look back', 4);
           this.audio.ui('radio');
         }
         break;
@@ -705,7 +705,7 @@ export class Game {
     this.hud.setStation(null, '');
     this.input.releaseLock();
     this.renderer.showViewModel(false);
-    this.hud.centerMessage('K.I.A.');
+    this.hud.centerMessage('SIGNAL LOST');
     this.audio.hurt(true);
   }
 
@@ -987,7 +987,7 @@ export class Game {
           float cloud = vn(p) * 0.6 + vn(p * 2.3 + uTime * 0.2) * 0.4;
           float fade = (1.0 - vUv.y) * smoothstep(0.0, 0.08, vUv.y);
           float bands = 0.6 + 0.4 * sin(vUv.y * 40.0 - uTime * 3.0);
-          vec3 col = vec3(0.25, 0.9, 0.18) * cloud * fade * bands;
+          vec3 col = vec3(0.62, 0.22, 0.85) * cloud * fade * bands;
           gl_FragColor = vec4(col * 0.9, cloud * fade * 0.8);
         }
       `,

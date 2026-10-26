@@ -444,7 +444,7 @@ export class Level {
     this.prop('shelf', -24, 80, 0); this.prop('shelf', -24, 84, 0); this.prop('shelf', -18, 80, 0);
     this.prop('counter', -16, 88.5, 0); this.prop('shelf', -26.9, 88, 1);
     this.deco('trash', -19, 85, 1); this.deco('crateSmall', -21.5, 88.5, 0.4);
-    this.addLight(0xffc890, 9, 12, -20, 3, 84, 'flicker');
+    this.addLight(0xff3030, 9, 12, -20, 3, 84, 'flicker');
     // --- Auto garage (enterable, with a crouch-only side shutter) -------------------------------
     this.building({
       x0: 12, z0: 76, x1: 30, z1: 94, h: 6.5, wall: M.plasterBlue, trim: M.concreteDark, enterable: true, interiorH: 4.2,
@@ -698,7 +698,7 @@ export class Level {
     this.beacon(R.x - 7, 26.5, R.z, M.glowRed, 1.6);
     const toxicPool = new THREE.Mesh(new THREE.PlaneGeometry(34, 34), M.lightPoolToxic);
     toxicPool.rotation.x = -Math.PI / 2; toxicPool.position.set(R.x, 0.06, R.z); this.root.add(toxicPool);
-    this.addLight(0x6aff4a, 30, 34, R.x, 5, R.z + 12, 'pulse');
+    this.addLight(0xa04cff, 30, 34, R.x, 5, R.z + 12, 'pulse');
     // Octagon collider approximation
     this.world.add(R.x - 9, 0, R.z - 3.7, R.x + 9, 26, R.z + 3.7, { surface: 'concrete' });
     this.world.add(R.x - 3.7, 0, R.z - 9, R.x + 3.7, 26, R.z + 9, { surface: 'concrete' });
@@ -721,7 +721,7 @@ export class Level {
     this.prop('tube', -35, -48.5, 0); this.prop('tube', -38, -48.5, 0); this.prop('tube', -41, -48.5, 0);
     this.prop('desk', -33, -60, 1); this.prop('locker', -57.2, -47, 1); this.prop('locker', -57.2, -48, 1);
     this.prop('shelf', -48.5, -66.9, 0);
-    this.addLight(0x9affc0, 8, 14, -44, 3, -56, 'flicker');
+    this.addLight(0xff2a2a, 8, 14, -44, 3, -56, 'flicker');
     // --- Decontamination area and military response -------------------------------------------
     this.prop('deconTent', 24, -40, 0); this.prop('deconTent', 31, -40, 0);
     this.prop('humvee', 16, -48, 0); this.prop('sandbags', 20, -34, 0); this.prop('sandbags', 22, -34, 0);

@@ -1,10 +1,18 @@
-# DEAD SIGNAL: EXCLUSION ZONE
+# DEAD SIGNAL: A Horrors.Fun Game
 
-*The Claude Opus 5.5 Zombies Game* — built end-to-end by Claude Opus 5.5 in Claude Code from a single prompt.
+**Play free at [deadsignal.horrors.fun](https://deadsignal.horrors.fun)**
 
-A single-player, browser-based first-person extraction-survival shooter built with Three.js, TypeScript and Vite.
-Insert into a quarantined industrial district at blue hour, complete two contracts, upgrade your gear, then signal a
-helicopter and survive the final horde long enough to board it — before the contamination front reaches the LZ.
+District 9 stopped answering three nights ago. Get in, bring the depot uplink back to life, hunt WARDEN-9, then
+signal RAVEN 2-1 and survive the final horde long enough to board it, before the rot reaches the landing zone.
+A first-person extraction-survival shooter in the browser, built with Three.js, TypeScript and Vite.
+
+This is the Horrors.Fun edition: blood-moon night lighting, violet contamination, red-eyed infected with claws and
+fangs, and the Horrors.Fun look and voice throughout. Co-op for 2–4 players is in development.
+
+### Credits
+
+Built on [Dead Signal: Exclusion Zone](https://github.com/bridge-mind/claude-opus-5.5-zombies-game) by BridgeMind,
+released under the MIT License (see [LICENSE](LICENSE)). All 3D models, textures and audio are generated in code.
 
 ## Run it
 

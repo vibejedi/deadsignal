@@ -79,14 +79,14 @@ export class Menus {
 
   showResults(outcome: 'victory' | 'dead' | 'timeout', s: ResultStats, record: boolean, best: BestRun | null): void {
     const title = $('result-title');
-    title.textContent = outcome === 'victory' ? 'EXTRACTED' : outcome === 'dead' ? 'KILLED IN ACTION' : 'ZONE LOST';
+    title.textContent = outcome === 'victory' ? 'YOU MADE IT OUT' : outcome === 'dead' ? 'SIGNAL LOST' : 'SWALLOWED';
     title.className = outcome === 'victory' ? 'win' : 'lose';
     $('result-kicker').textContent = outcome === 'victory' ? 'MISSION REPORT · SUCCESS' : 'MISSION REPORT · FAILURE';
     $('result-sub').textContent = outcome === 'victory'
-      ? 'RAVEN 2-1 cleared the district with you aboard. The uplink data and the WARDEN-9 confirmation made it out.'
+      ? 'RAVEN 2-1 lifted off with you aboard, still shaking. The uplink data made it out. So did the proof that WARDEN-9 is finally dead.'
       : outcome === 'dead'
-        ? 'Your signal went dark inside the exclusion zone. Recovery teams will not be sent.'
-        : 'The contamination front swallowed the landing zone before you could get out.';
+        ? 'Your signal went dark inside the exclusion zone. Nobody is coming for the body. Something already did.'
+        : 'The rot swallowed the landing zone before you got out. RAVEN 2-1 didn\'t wait.';
     const cells: [string, string][] = [
       ['OUTCOME', outcome === 'victory' ? 'SUCCESS' : 'FAILED'],
       ['SURVIVAL TIME', fmt(s.time)],

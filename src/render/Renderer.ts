@@ -1,4 +1,4 @@
-// WebGL renderer, blue-hour lighting, sky dome, environment reflections and restrained post-processing.
+// WebGL renderer, blood-moon night lighting, sky dome, environment reflections and restrained post-processing.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -39,10 +39,10 @@ const GradeShader = {
       // Damage: red edges
       float edge = smoothstep(0.25, 0.8, r);
       c.rgb = mix(c.rgb, vec3(0.55, 0.02, 0.0), edge * uDamage * 0.75);
-      // Contamination: sickly green tint and pulsing edges
+      // Contamination: sickly violet tint and pulsing edges
       float pulse = 0.75 + 0.25 * sin(uTime * 4.0);
-      c.rgb = mix(c.rgb, c.rgb * vec3(0.7, 1.15, 0.6) + vec3(0.02, 0.07, 0.0), uToxic * 0.7);
-      c.rgb = mix(c.rgb, vec3(0.2, 0.55, 0.05), edge * uToxic * 0.45 * pulse);
+      c.rgb = mix(c.rgb, c.rgb * vec3(1.05, 0.7, 1.15) + vec3(0.05, 0.0, 0.07), uToxic * 0.7);
+      c.rgb = mix(c.rgb, vec3(0.45, 0.1, 0.6), edge * uToxic * 0.45 * pulse);
       // Film grain
       c.rgb += (hash(vUv * 1000.0 + uTime) - 0.5) * uGrain;
       gl_FragColor = c;
@@ -77,16 +77,16 @@ export class Renderer {
 
     this.camera = new THREE.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.05, 700);
     this.scene.add(this.camera);
-    const fogColor = new THREE.Color(0x2a3444);
-    this.scene.fog = new THREE.FogExp2(fogColor.getHex(), 0.0105);
+    const fogColor = new THREE.Color(0x1c0f16);
+    this.scene.fog = new THREE.FogExp2(fogColor.getHex(), 0.0135);
     this.scene.background = fogColor;
 
-    // Blue-hour lighting: cold sky fill, low moonlight key with shadows.
-    this.hemi = new THREE.HemisphereLight(0x7486a8, 0x2a2622, 1.55);
+    // Horrors.Fun night: violet sky fill, pale moonlight key with shadows, blood-red horizon.
+    this.hemi = new THREE.HemisphereLight(0x6a5a7e, 0x241418, 1.35);
     this.scene.add(this.hemi);
-    const ambient = new THREE.AmbientLight(0x3a4458, 0.55);
+    const ambient = new THREE.AmbientLight(0x3d2c3c, 0.55);
     this.scene.add(ambient);
-    this.sun = new THREE.DirectionalLight(0xa9bddf, 1.55);
+    this.sun = new THREE.DirectionalLight(0xb7a8d6, 1.25);
     this.sun.position.set(40, 60, 25);
     this.sun.castShadow = true;
     this.sun.shadow.mapSize.set(2048, 2048);
@@ -143,11 +143,11 @@ export class Renderer {
         float hash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
         void main() {
           float h = vDir.y;
-          vec3 zenith = vec3(0.035, 0.06, 0.13);
-          vec3 mid = vec3(0.12, 0.17, 0.28);
-          // Warm residual glow low in the west (-X)
+          vec3 zenith = vec3(0.03, 0.015, 0.04);
+          vec3 mid = vec3(0.11, 0.05, 0.1);
+          // Blood-red glow low in the west (-X)
           float west = pow(max(0.0, dot(normalize(vec3(vDir.x, 0.0, vDir.z)), normalize(vec3(-1.0, 0.0, 0.35)))), 3.0);
-          vec3 horizon = mix(uFog * 1.05, vec3(0.42, 0.3, 0.26), west * 0.55);
+          vec3 horizon = mix(uFog * 1.05, vec3(0.5, 0.08, 0.1), west * 0.6);
           vec3 c = mix(horizon, mid, smoothstep(0.0, 0.18, h));
           c = mix(c, zenith, smoothstep(0.18, 0.7, h));
           // Faint stars near the zenith
@@ -156,7 +156,7 @@ export class Renderer {
           c += vec3(s) * 0.6;
           // Contamination glow on the northern horizon (-Z)
           float north = pow(max(0.0, -vDir.z), 6.0) * (1.0 - smoothstep(0.0, 0.25, h));
-          c += vec3(0.05, 0.12, 0.03) * north;
+          c += vec3(0.1, 0.03, 0.14) * north;
           if (h < 0.0) c = uFog;
           gl_FragColor = vec4(c, 1.0);
         }
@@ -181,7 +181,7 @@ export class Renderer {
       c.lookAt(0, 8, 0);
       envScene.add(c);
     }
-    const green = new THREE.Mesh(new THREE.PlaneGeometry(40, 10), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x60ff40).multiplyScalar(1.5), side: THREE.DoubleSide }));
+    const green = new THREE.Mesh(new THREE.PlaneGeometry(40, 10), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xb45cff).multiplyScalar(1.5), side: THREE.DoubleSide }));
     green.position.set(0, 10, -150);
     envScene.add(green);
     const rt = pmrem.fromScene(envScene, 0.02);

@@ -331,7 +331,7 @@ export function buildProps(M: Materials): Record<PropName, PropDef> {
     def('labTable', t, [[-0.9, 0, -0.45, 0.9, 1.0, 0.45]], 'metal');
     const tube = new PropTemplate();
     tube.cyl(M.metalDark, 0.6, 0.6, 0.3, 16, 0, 0.15, 0);
-    tube.add(new THREE.MeshStandardMaterial({ color: 0x5aff7a, emissive: 0x2a8a3a, emissiveIntensity: 1.2, transparent: true, opacity: 0.55, roughness: 0.1 }),
+    tube.add(new THREE.MeshStandardMaterial({ color: 0xb45cff, emissive: 0x6a2a8a, emissiveIntensity: 1.2, transparent: true, opacity: 0.55, roughness: 0.1 }),
       new THREE.CylinderGeometry(0.5, 0.5, 2.0, 16, 1, true), 0, 1.3, 0);
     tube.cyl(M.metalDark, 0.6, 0.6, 0.3, 16, 0, 2.45, 0);
     def('tube', tube, [[-0.6, 0, -0.6, 0.6, 2.6, 0.6]], 'glass');

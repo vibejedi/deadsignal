@@ -3,9 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dead Signal: Exclusion Zone</title>
-    <meta name="description" content="A first-person extraction survival shooter set in a quarantined industrial district." />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23111'/%3E%3Cpath d='M16 4 L28 26 H4 Z' fill='none' stroke='%23e8c35a' stroke-width='3'/%3E%3Ccircle cx='16' cy='20' r='2.5' fill='%23e8c35a'/%3E%3C/svg%3E" />
+    <title>Dead Signal | Horrors.Fun</title>
+    <meta name="description" content="A free first-person zombie survival shooter from Horrors.Fun. Restore the uplink, hunt WARDEN-9 and get on the last helicopter out of District 9." />
+    <meta name="theme-color" content="#0a0507" />
+    <meta property="og:site_name" content="Horrors.Fun" />
+    <meta property="og:title" content="Dead Signal - A Horrors.Fun Game" />
+    <meta property="og:description" content="District 9 stopped answering. Get in, hold the uplink, hunt WARDEN-9 and outlast the horde. Free in your browser." />
+    <meta property="og:url" content="https://deadsignal.horrors.fun/" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="canonical" href="https://deadsignal.horrors.fun/" />
+    <link rel="icon" type="image/png" href="./images/favicon-96x96.png" sizes="96x96" />
+    <link rel="shortcut icon" href="./images/favicon.ico" />
+    <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
   </head>
   <body>
     <div id="app"></div>
@@ -13,16 +22,17 @@
     <!-- Loading -->
     <div id="loading" class="screen">
       <div class="load-inner">
+        <img class="load-logo" src="./images/hf-logo.png" alt="Horrors.Fun" />
         <div class="brand-small">DEAD SIGNAL</div>
         <div class="load-bar"><div id="load-fill"></div></div>
-        <div id="load-text">ESTABLISHING UPLINK…</div>
+        <div id="load-text">TUNING INTO DEAD AIR…</div>
       </div>
     </div>
 
     <!-- Error -->
     <div id="error" class="screen hidden">
       <div class="panel error-panel">
-        <h2>UNABLE TO DEPLOY</h2>
+        <h2>SIGNAL LOST</h2>
         <p id="error-text"></p>
       </div>
     </div>
@@ -30,19 +40,21 @@
     <!-- Title -->
     <div id="title" class="screen hidden">
       <div class="title-left">
-        <div class="title-kicker">JOINT TASK FORCE ARGUS · OPERATION BLACKWATER</div>
+        <div class="title-brand"><img src="./images/hf-logo.png" alt="Horrors.Fun" /><span>A HORRORS.FUN GAME</span></div>
+        <div class="title-kicker">NIGHT OPERATION · DISTRICT 9 · NO SURVIVORS CONFIRMED</div>
         <h1 class="title-logo">DEAD SIGNAL</h1>
         <div class="title-sub">EXCLUSION ZONE</div>
         <p class="briefing">
-          The Halcyon outbreak has overrun District 9. Insert at Checkpoint 7, restore the depot uplink,
-          eliminate the escaped subject <b>WARDEN-9</b>, then signal <b>RAVEN 2-1</b> for extraction before the
-          contamination front reaches the landing zone.
+          District 9 stopped answering three nights ago. Whatever crawled out of Halcyon is still hungry.
+          Get in at Checkpoint 7, bring the depot uplink back to life, put down the thing they called <b>WARDEN-9</b>,
+          then call <b>RAVEN 2-1</b> and pray it lands before the rot reaches you.
         </p>
         <div class="menu-buttons">
           <button id="btn-deploy" class="btn primary">DEPLOY</button>
           <button id="btn-settings" class="btn">SETTINGS</button>
         </div>
         <div id="best-run" class="best-run"></div>
+        <div class="credit-line">Built on <a href="https://github.com/bridge-mind/claude-opus-5.5-zombies-game" target="_blank" rel="noopener">Dead Signal: Exclusion Zone</a> by BridgeMind · MIT License</div>
       </div>
       <div class="title-right">
         <div class="controls-card">
@@ -65,11 +77,11 @@
         <div class="controls-card">
           <div class="card-head">MISSION</div>
           <ol class="mission-steps">
-            <li>Activate the <b>Uplink Relay</b> at Kessler Depot and hold its zone.</li>
-            <li>Hunt <b>WARDEN-9</b> inside the Halcyon Compound.</li>
-            <li>Call exfil at the <b>LZ</b>, survive the horde, board the helicopter.</li>
+            <li>Wake the <b>Uplink Relay</b> at Kessler Depot and hold its zone. The noise brings them.</li>
+            <li>Hunt <b>WARDEN-9</b> inside the Halcyon Compound. Helmet first, then the head.</li>
+            <li>Call exfil at the <b>LZ</b>, outlast the horde, and get on that helicopter.</li>
           </ol>
-          <div class="hint">Loot caches and kills earn Salvage. Spend it at Quartermaster stations and the Armory bench.</div>
+          <div class="hint">Kills and caches earn Salvage. Spend it at Quartermaster stations and the Armory bench. The dead don’t take cash.</div>
         </div>
       </div>
     </div>
