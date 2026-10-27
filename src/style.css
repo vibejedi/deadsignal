@@ -1,6 +1,6 @@
 @font-face {
-  font-family: "Redrum";
-  src: url("/Redrum.otf") format("opentype");
+  font-family: "Metal Mania";
+  src: url("/MetalMania-Regular.ttf") format("truetype");
   font-display: block;
 }
 
@@ -17,7 +17,7 @@
   --panel-solid: rgba(14, 6, 10, 0.94);
   --line: rgba(245, 233, 224, 0.16);
   --violet: #9b6bb3;
-  --display: "Redrum", "DIN Alternate", "Bahnschrift", sans-serif;
+  --display: "Metal Mania", "DIN Alternate", "Bahnschrift", sans-serif;
   --font: "DIN Alternate", "Bahnschrift", "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
   --mono: "SF Mono", Menlo, Consolas, monospace;
 }
