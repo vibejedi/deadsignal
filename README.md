@@ -1,6 +1,6 @@
 # SURVIVE THE HORRORS: A Horrors.Fun Game
 
-**Play free at [deadsignal.horrors.fun](https://deadsignal.horrors.fun)**
+**Play free at [survive.horrors.fun](https://survive.horrors.fun)**
 
 District 9 stopped answering three nights ago. Get in, bring the depot uplink back to life, hunt WARDEN-9, then
 signal RAVEN 2-1 and survive the final horde long enough to board it, before the rot reaches the landing zone.
