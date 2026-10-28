@@ -285,6 +285,44 @@ b { color: var(--amber); font-weight: 700; }
 .stat .k2 { font-size: 10px; letter-spacing: 0.25em; color: var(--dim); margin-top: 3px; }
 .results-panel .menu-buttons { margin-top: 24px; }
 
+/* ---------- Horrors.Fun account & achievements ---------- */
+.account-panel {
+  margin-top: 18px; max-width: 480px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--line);
+  border-left: 2px solid var(--violet); display: flex; flex-direction: column; gap: 5px; backdrop-filter: blur(4px);
+  font-size: 12px; letter-spacing: 0.1em; user-select: text;
+}
+.account-panel:empty { display: none; }
+.acct-who { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.acct-label { font-size: 11px; letter-spacing: 0.32em; color: var(--dim); }
+.acct-name { font-family: var(--display); font-size: 22px; letter-spacing: 0.04em; color: var(--ink); line-height: 1; }
+.acct-sep { color: var(--faint); }
+.acct-mode { font-size: 11px; letter-spacing: 0.32em; color: var(--dim); }
+.acct-mode.ranked { color: var(--amber); text-shadow: 0 0 12px rgba(224,40,60,0.45); }
+.acct-cta { font-family: var(--display); font-size: 19px; letter-spacing: 0.04em; color: var(--amber); text-decoration: none; }
+.acct-cta:hover { color: #ff3d52; text-decoration: underline; }
+.acct-link { color: var(--violet); font-size: 12px; letter-spacing: 0.1em; }
+.acct-link:hover { color: var(--blue); }
+.acct-note { color: var(--dim); font-size: 11px; letter-spacing: 0.1em; line-height: 1.5; }
+.acct-note.warn { color: #ffb4aa; }
+
+#ach-toasts {
+  position: fixed; right: 26px; top: 280px; z-index: 45; pointer-events: none;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
+.ach-toast {
+  display: flex; align-items: center; gap: 12px; min-width: 260px; max-width: 360px; padding: 10px 16px 10px 10px;
+  background: var(--panel-solid); border: 1px solid var(--amber); box-shadow: 0 0 24px rgba(224,40,60,0.25), 0 10px 30px rgba(0,0,0,0.5);
+  animation: achIn 0.3s ease-out; transition: opacity 0.3s, transform 0.3s;
+}
+.ach-toast.out { opacity: 0; transform: translateX(16px); }
+.ach-icon { width: 48px; height: 48px; object-fit: cover; flex: none; border: 1px solid var(--line); background: rgba(0,0,0,0.4); }
+.ach-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ach-kicker { font-size: 10px; letter-spacing: 0.32em; color: var(--violet); }
+.ach-name { font-family: var(--display); font-size: 22px; letter-spacing: 0.03em; color: var(--ink); line-height: 1.05; }
+.ach-pts { font-size: 13px; letter-spacing: 0.2em; color: var(--amber); font-weight: 700; }
+.ach-pts.review { color: var(--dim); font-weight: 400; font-style: italic; letter-spacing: 0.12em; }
+@keyframes achIn { from { opacity: 0; transform: translateX(24px); } }
+
 #fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 40; transition: opacity 0.8s; }
 
 @media (max-width: 900px) {

@@ -1,6 +1,7 @@
 // Game lifecycle and orchestration: state machine, fixed-step simulation, render loop and wiring
 // between player, weapons, enemies, mission, audio and UI.
 import * as THREE from 'three';
+import { account, reporter } from '../account/Account';
 import { ENEMIES, GRENADE, MAX_FRAME_DT, MISSION, PLAYER, SIM_DT, WEAPONS, regionAt, type WeaponId } from '../config';
 import { AudioEngine } from '../audio/Audio';
 import { EnemyManager } from '../enemies/EnemyManager';
@@ -16,6 +17,7 @@ import { applyDamage, beginPlate, cancelPlate, maxArmor, updateVitals } from '..
 import { Materials } from '../render/materials';
 import { Renderer } from '../render/Renderer';
 import { TextureLib } from '../render/textures';
+import { AccountPanel, AchievementToasts } from '../ui/AccountUi';
 import { Hud, type ContractView, type StationItemView, type WaypointView } from '../ui/Hud';
 import { MapRenderer, type MapMarker, type MapState } from '../ui/MapRenderer';
 import { Menus } from '../ui/Menus';
@@ -124,6 +126,11 @@ export class Game {
       onShot: () => { this.mission.stats.shots++; },
     });
     this.menus = new Menus(this);
+    // Horrors.Fun sign-in and achievements. Signed-out players play the same game with nothing reported.
+    new AccountPanel();
+    const toasts = new AchievementToasts();
+    reporter.onEarned = (list) => toasts.show(list);
+    account.watch();
     this.applySettings();
     this.resetMission();
     this.input.onLockChange = (locked) => this.onLockChange(locked);
@@ -189,6 +196,8 @@ export class Game {
     this.audio.startAmbience();
     if (this.state !== 'title') this.resetMission();
     this.state = 'playing';
+    // Every deploy is a fresh mission: report it as a new run. A sped-up (dev) clock ends reporting.
+    void reporter.startRun(() => (this.timeScale === 1 ? this.mission.time : null));
     this.menus.showScreen('none');
     this.hud.show(true);
     this.renderer.showViewModel(true);
@@ -231,6 +240,7 @@ export class Game {
   }
 
   quitToTitle(): void {
+    reporter.abandon();
     this.input.releaseLock();
     this.resetMission();
     this.state = 'title';
@@ -633,8 +643,11 @@ export class Game {
     if (this.state !== 'playing' && this.state !== 'dying') return;
     this.mission.stats.kills++;
     if (head) this.mission.stats.headshots++;
+    reporter.event({ type: 'kill', headshot: head, elite: z.elite });
     if (z.elite) {
       if (this.mission.onEliteKilled()) {
+        // The hunt completes here; Mission never emits its huntComplete event.
+        reporter.event({ type: 'contract', which: 'hunt' });
         addCash(this.loadout, MISSION.huntReward);
         this.mission.stats.salvageEarned += MISSION.huntReward;
         this.player.vitals.plates = Math.min(PLAYER.maxPlateInventory, this.player.vitals.plates + 2);
@@ -665,6 +678,7 @@ export class Game {
   private onMissionEvent(e: ReturnType<Mission['update']>[number]): void {
     switch (e.type) {
       case 'defenseComplete':
+        reporter.event({ type: 'contract', which: 'defense' });
         addCash(this.loadout, MISSION.defenseReward);
         this.mission.stats.salvageEarned += MISSION.defenseReward;
         for (const s of this.loadout.slots) if (s) addReserve(s, Infinity);
@@ -698,6 +712,7 @@ export class Game {
   private onDeath(): void {
     if (this.state !== 'playing') return;
     this.mission.outcome = this.mission.outcome === 'active' ? 'dead' : this.mission.outcome;
+    reporter.end(this.mission.outcome === 'timeout' ? 'timeout' : 'dead', this.mission.time); // as showResults reads it
     this.mission.extraction.fail();
     this.state = 'dying';
     this.dyingT = 0;
@@ -711,6 +726,7 @@ export class Game {
 
   private onTimeout(): void {
     if (this.state !== 'playing') return;
+    reporter.end('timeout', this.mission.time);
     this.state = 'dying';
     this.dyingT = 0;
     this.input.releaseLock();
@@ -720,6 +736,7 @@ export class Game {
 
   private onVictory(): void {
     this.mission.outcome = 'victory';
+    reporter.end('victory', this.mission.time);
     this.state = 'extracting';
     this.extractT = 0;
     this.input.releaseLock();
