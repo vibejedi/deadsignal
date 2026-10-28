@@ -37,7 +37,7 @@ export type RunEvent =
   | { type: 'tick'; missionTime: number }
   | { type: 'kill'; headshot: boolean; elite: boolean }
   | { type: 'contract'; which: 'defense' | 'hunt' }
-  | { type: 'end'; outcome: Outcome; missionTime: number };
+  | { type: 'end'; outcome: Outcome; missionTime: number; deadline: number };
 type Stamped = RunEvent & { t: number };
 
 class ApiError extends Error {
@@ -266,8 +266,9 @@ class Reporter {
   }
 
   /** The mission ended with a result: report it and send it now. */
-  end(outcome: Outcome, missionTime: number): void {
-    this.event({ type: 'end', outcome, missionTime: round(missionTime) });
+  /** `deadline` is the mission clock's deadline at the end: the final phase shortens it (Mission.startFinal). */
+  end(outcome: Outcome, missionTime: number, deadline: number): void {
+    this.event({ type: 'end', outcome, missionTime: round(missionTime), deadline: round(deadline) });
   }
 
   /** Left the mission without a result (main menu or restart). A run whose end is still being sent finishes sending. */

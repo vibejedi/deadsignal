@@ -712,7 +712,7 @@ export class Game {
   private onDeath(): void {
     if (this.state !== 'playing') return;
     this.mission.outcome = this.mission.outcome === 'active' ? 'dead' : this.mission.outcome;
-    reporter.end(this.mission.outcome === 'timeout' ? 'timeout' : 'dead', this.mission.time); // as showResults reads it
+    reporter.end(this.mission.outcome === 'timeout' ? 'timeout' : 'dead', this.mission.time, this.mission.deadline); // as showResults reads it
     this.mission.extraction.fail();
     this.state = 'dying';
     this.dyingT = 0;
@@ -726,7 +726,7 @@ export class Game {
 
   private onTimeout(): void {
     if (this.state !== 'playing') return;
-    reporter.end('timeout', this.mission.time);
+    reporter.end('timeout', this.mission.time, this.mission.deadline);
     this.state = 'dying';
     this.dyingT = 0;
     this.input.releaseLock();
@@ -736,7 +736,7 @@ export class Game {
 
   private onVictory(): void {
     this.mission.outcome = 'victory';
-    reporter.end('victory', this.mission.time);
+    reporter.end('victory', this.mission.time, this.mission.deadline);
     this.state = 'extracting';
     this.extractT = 0;
     this.input.releaseLock();
